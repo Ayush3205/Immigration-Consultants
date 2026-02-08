@@ -1,8 +1,27 @@
+'use client';
+
 import { Menu, Mail, Phone } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function Header() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 250) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50">
+    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+      {/* Top bar - always visible with background */}
       <div className="bg-[#ff4500] text-white py-2">
         <div className="container mx-auto px-6 flex items-center justify-between text-sm">
           <div className="flex items-center gap-6">
@@ -18,7 +37,14 @@ export default function Header() {
         </div>
       </div>
 
-      <nav className="bg-black/40 backdrop-blur-md text-white py-4 border-b border-white/10">
+      {/* Navigation - background appears on scroll */}
+      <nav 
+        className={`text-white py-4 transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-black/90 backdrop-blur-md shadow-lg' 
+            : 'bg-transparent'
+        }`}
+      >
         <div className="container mx-auto px-6 flex items-center justify-between">
           <a href="/" className="text-2xl font-bold text-[#ff4500]">
             esante
