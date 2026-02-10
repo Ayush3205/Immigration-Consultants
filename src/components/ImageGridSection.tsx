@@ -4,19 +4,23 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Register GSAP plugin
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-export default function ImageGridSection() {
+type ImageGridSectionProps = {
+  heroTargetRef?: React.RefObject<HTMLDivElement>;
+  scrollProgress: number;
+};
+
+export default function ImageGridSection({ heroTargetRef, scrollProgress }: ImageGridSectionProps) {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const topRow1Ref = useRef<HTMLDivElement>(null);
   const topRow2Ref = useRef<HTMLDivElement>(null);
   const bottomRow1Ref = useRef<HTMLDivElement>(null);
   const bottomRow2Ref = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  // First section - 4 images top row
   const topImages1 = [
     { url: '/Image grid section top 1.png' },
     { url: '/Image grid section top 2.png' },
@@ -24,7 +28,6 @@ export default function ImageGridSection() {
     { url: '/Image grid section top 4.png' },
   ];
 
-  // First section - 5 images bottom row
   const topImages2 = [
     { url: '/Image grid section top 5.png' },
     { url: '/Image grid section top 6.jpg' },
@@ -33,17 +36,15 @@ export default function ImageGridSection() {
     { url: '/Image grid section top 9.jpg' },
   ];
 
-  // Second section - 5 images top row
   const bottomImages1 = [
     { url: '/Image grid section bottom 1.jpg' },
     { url: '/Image grid section bottom 2.jpg' },
     { url: '/Image grid section bottom 3.png' },
     { url: '/Image grid section bottom 4.jpg' },
-    { url: '/Image grid section bottom 5.jpg' },
   ];
 
-  // Second section - 4 images bottom row
   const bottomImages2 = [
+    { url: '/Image grid section bottom 5.jpg' },
     { url: '/Image grid section bottom 6.jpg' },
     { url: '/Image grid section bottom 7.jpg' },
     { url: '/Image grid section bottom 8.jpg' },
@@ -51,10 +52,27 @@ export default function ImageGridSection() {
   ];
 
   useEffect(() => {
-    // Add null checks before animating
-    if (!topRow1Ref.current || !topRow2Ref.current || !bottomRow1Ref.current || !bottomRow2Ref.current || !headingRef.current) return;
+    if (!sectionRef.current || !topRow1Ref.current || !topRow2Ref.current || 
+        !bottomRow1Ref.current || !bottomRow2Ref.current || !headingRef.current) return;
 
-    // Animate first top row (4 images)
+    // Animate section fade in
+    gsap.fromTo(
+      sectionRef.current,
+      { opacity: 0 },
+      {
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top bottom',
+          end: 'top 60%',
+          scrub: 1,
+        },
+      }
+    );
+
+    // Animate first top row
     gsap.fromTo(
       topRow1Ref.current,
       { x: -100, opacity: 0 },
@@ -89,7 +107,7 @@ export default function ImageGridSection() {
       }
     );
 
-    // Animate second top row (5 images)
+    // Animate second top row
     gsap.fromTo(
       topRow2Ref.current,
       { x: 100, opacity: 0 },
@@ -141,7 +159,7 @@ export default function ImageGridSection() {
       }
     );
 
-    // Animate first bottom row (5 images)
+    // Animate first bottom row
     gsap.fromTo(
       bottomRow1Ref.current,
       { x: -100, opacity: 0 },
@@ -158,8 +176,9 @@ export default function ImageGridSection() {
       }
     );
 
+    const firstFourChildren = Array.from(bottomRow1Ref.current.children).slice(0, 4);
     gsap.fromTo(
-      bottomRow1Ref.current.children,
+      firstFourChildren,
       { y: -50, opacity: 0, scale: 0.8 },
       {
         y: 0,
@@ -176,7 +195,7 @@ export default function ImageGridSection() {
       }
     );
 
-    // Animate second bottom row (4 images)
+    // Animate second bottom row
     gsap.fromTo(
       bottomRow2Ref.current,
       { x: 100, opacity: 0 },
@@ -211,14 +230,22 @@ export default function ImageGridSection() {
       }
     );
 
-    // Cleanup
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, []);
 
+  // Target box appears early so video has somewhere to land
+  const targetBoxVisible = scrollProgress > 0.01; // Appears almost immediately
+  const boxWidth = targetBoxVisible ? (typeof window !== 'undefined' && window.innerWidth >= 768 ? 112 : 80) : 0;
+  const boxHeight = typeof window !== 'undefined' && window.innerWidth >= 768 ? 112 : 80;
+
   return (
-    <section className="py-20 bg-white overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="relative py-20 bg-transparent overflow-visible"
+      style={{ zIndex: 40 }}
+    >
       <div className="container mx-auto px-6 max-w-7xl">
         {/* First Top Row - 4 images */}
         <div 
@@ -230,11 +257,7 @@ export default function ImageGridSection() {
               key={idx}
               className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-all duration-300 cursor-pointer flex-shrink-0"
             >
-              <img
-                src={img.url}
-                alt=""
-                className="w-full h-full object-cover"
-              />
+              <img src={img.url} alt="" className="w-full h-full object-cover" />
             </div>
           ))}
         </div>
@@ -249,11 +272,7 @@ export default function ImageGridSection() {
               key={idx}
               className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-all duration-300 cursor-pointer flex-shrink-0"
             >
-              <img
-                src={img.url}
-                alt=""
-                className="w-full h-full object-cover"
-              />
+              <img src={img.url} alt="" className="w-full h-full object-cover" />
             </div>
           ))}
         </div>
@@ -272,26 +291,49 @@ export default function ImageGridSection() {
           </span>
         </h2>
 
-        {/* First Bottom Row - 5 images */}
+        {/* First Bottom Row - WITH TARGET IN CENTER */}
         <div 
           ref={bottomRow1Ref}
           className="flex justify-center items-center gap-4 mb-6"
         >
-          {bottomImages1.map((img, idx) => (
+          {/* First 2 images */}
+          {bottomImages1.slice(0, 2).map((img, idx) => (
             <div
               key={idx}
               className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-all duration-300 cursor-pointer flex-shrink-0"
             >
-              <img
-                src={img.url}
-                alt=""
-                className="w-full h-full object-cover"
-              />
+              <img src={img.url} alt="" className="w-full h-full object-cover" />
+            </div>
+          ))}
+
+          {/* TARGET BOX - CENTER OF ROW 1 - Video lands here and stays pinned */}
+          <div
+            ref={heroTargetRef}
+            className="relative rounded-2xl overflow-hidden shadow-lg flex-shrink-0"
+            style={{
+              width: `${boxWidth}px`,
+              height: `${boxHeight}px`,
+              opacity: targetBoxVisible ? 1 : 0,
+              marginLeft: targetBoxVisible ? '1rem' : '0',
+              marginRight: targetBoxVisible ? '1rem' : '0',
+              transition: 'all 0.5s ease-out',
+              backgroundColor: 'transparent',
+              border: scrollProgress < 0.85 ? '2px dashed rgba(255, 69, 0, 0.3)' : 'none',
+            }}
+          />
+
+          {/* Last 2 images */}
+          {bottomImages1.slice(2).map((img, idx) => (
+            <div
+              key={idx + 2}
+              className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-all duration-300 cursor-pointer flex-shrink-0"
+            >
+              <img src={img.url} alt="" className="w-full h-full object-cover" />
             </div>
           ))}
         </div>
 
-        {/* Second Bottom Row - 4 images */}
+        {/* Second Bottom Row - 5 images (no target) */}
         <div 
           ref={bottomRow2Ref}
           className="flex justify-center items-center gap-4"
@@ -301,11 +343,7 @@ export default function ImageGridSection() {
               key={idx}
               className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-all duration-300 cursor-pointer flex-shrink-0"
             >
-              <img
-                src={img.url}
-                alt=""
-                className="w-full h-full object-cover"
-              />
+              <img src={img.url} alt="" className="w-full h-full object-cover" />
             </div>
           ))}
         </div>

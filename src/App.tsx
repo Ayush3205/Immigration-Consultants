@@ -1,5 +1,6 @@
+import { useRef, useState, useEffect } from 'react';
 import Header from './components/Header';
-import Hero from './components/Hero';
+import HeroScrollWrapper from './components/HeroScrollWrapper';
 import ImageGridSection from './components/ImageGridSection';
 import StatsSection from './components/StatsSection';
 import ServicesSection from './components/ServicesSection';
@@ -13,11 +14,37 @@ import CTASection from './components/CTASection';
 import Footer from './components/Footer';
 
 function App() {
+  const heroTargetRef = useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    let rafId: number;
+    const handleScroll = () => {
+      rafId = requestAnimationFrame(() => {
+        const vh = window.innerHeight;
+        const progress = Math.min(window.scrollY / (vh * 2.5), 1);
+        setScrollProgress(progress);
+      });
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Header />
-      <Hero />
-      <ImageGridSection />
+      <HeroScrollWrapper heroTargetRef={heroTargetRef}>
+        {(scrollProgress) => (
+          <ImageGridSection 
+            heroTargetRef={heroTargetRef} 
+            scrollProgress={scrollProgress}
+          />
+        )}
+      </HeroScrollWrapper>
       <StatsSection />
       <ServicesSection />
       <WhatWeDo />

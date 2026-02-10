@@ -1,31 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 
-export default function Hero() {
+type HeroProps = {
+  scrollProgress?: number;
+};
+
+export default function Hero({ scrollProgress = 0 }: HeroProps) {
   const [mousePos1, setMousePos1] = useState({ x: -100, index: -10 });
   const [mousePos2, setMousePos2] = useState({ x: -100, index: -10 });
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const heroRef = useRef<HTMLElement>(null);
 
   const text1 = "Migration simplified.";
   const text2 = "Dreams amplified.";
-
-  // Handle scroll for shrink effect
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!heroRef.current) return;
-      
-      const heroHeight = heroRef.current.offsetHeight;
-      const scrolled = window.scrollY;
-      const progress = Math.min(scrolled / heroHeight, 1);
-      
-      setScrollProgress(progress);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleMouseMove = (
     e: React.MouseEvent<HTMLSpanElement>,
@@ -37,13 +23,13 @@ export default function Hero() {
     const x = e.clientX - rect.left;
     const charWidth = rect.width / text.length;
     const index = Math.floor(x / charWidth);
-    
+
     setMousePos({ x, index });
   };
 
   const getCharStyle = (index: number, hoveredIndex: number) => {
     const distance = Math.abs(index - hoveredIndex);
-    
+
     if (distance === 0) {
       return {
         fontWeight: 900,
@@ -67,44 +53,34 @@ export default function Hero() {
     }
   };
 
-  // Calculate transform based on scroll
-  const scale = 1 - (scrollProgress * 0.5); // Shrinks to 50%
-  const opacity = 1 - scrollProgress;
+  // Text fades faster, video stays visible
+  const textOpacity = Math.max(1 - scrollProgress * 2.5, 0);
 
   return (
-    <section 
-      ref={heroRef}
-      className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden pt-28"
-      style={{
-        transform: `scale(${scale})`,
-        opacity: opacity,
-        transition: 'transform 0.1s ease-out, opacity 0.1s ease-out',
-      }}
-    >
-      {/* Video Background */}
+    <section className="absolute inset-0 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 pt-28">
+      {/* Video background - ALWAYS VISIBLE AND PLAYING */}
       <video
         autoPlay
         loop
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover opacity-60"
+        className="absolute inset-0 h-full w-full object-cover opacity-60"
+        key="hero-video"
       >
         <source src="/hero-video.mp4" type="video/mp4" />
       </video>
-
-      {/* Fallback image */}
-      {/* <div
-        className="absolute inset-0 bg-cover bg-center opacity-60 -z-10"
-        style={{
-          backgroundImage: "url('/Hero Section.jpg')"
-        }}
-      /> */}
-
-      {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-black/20" />
 
-      <div className="relative z-10 text-center text-white px-6 max-w-4xl">
-        <h1 className="text-5xl md:text-6xl mb-6 leading-tight select-none">
+      {/* Text content - fades early */}
+      <div 
+        className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6"
+        style={{
+          opacity: textOpacity,
+          pointerEvents: textOpacity < 0.3 ? 'none' : 'auto',
+          transition: 'opacity 0.15s ease-out',
+        }}
+      >
+        <h1 className="mb-6 max-w-4xl select-none text-center text-5xl font-medium leading-tight text-white md:text-6xl">
           <span
             className="block cursor-pointer"
             onMouseMove={(e) => handleMouseMove(e, setMousePos1, text1)}
@@ -136,7 +112,7 @@ export default function Hero() {
             ))}
           </span>
         </h1>
-        <button className="bg-[#ff4500] bg-transparent border-2 border-[#ff4500]/80 hover:border-[#ff4500] text-white text-base font-medium px-9 py-3 rounded-full transition-all duration-300 hover:bg-[#ff4500] shadow-lg hover:shadow-xl">
+        <button className="rounded-full border-2 border-[#ff4500]/80 bg-transparent px-9 py-3 text-base font-medium text-white shadow-lg transition-all duration-300 hover:border-[#ff4500] hover:bg-[#ff4500] hover:shadow-xl">
           Book a Demo
         </button>
       </div>
